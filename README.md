@@ -1,110 +1,211 @@
-# InterPlanetary Consensus (IPC)
+# InterPlanetary Utility Package (IPUP)
+
+<div style="text-align: center;">
+    <img src="https://cdn.dorahacks.io/static/files/18eb8831790624b9854f72c4774ab220.png">
+    <br>
+</div>
 
 **‼️ All the modules in the IPC stack (including the contracts) haven't been audited, tested in depth, or otherwise verified. Moreover, the system is missing critical recovery functionality in case of crashes. There are multiple ways in which you may lose funds moved into an IPC subnet, and we strongly advise against deploying IPC on mainnet and/or using it with tokens with real value.**
 
-IPC is a framework that enables on-demand horizontal scalability of networks, by deploying "subnets" running different consensus algorithms depending on the application's requirements. With IPC, dApps can reach planetary scale through recursively scalable subnets, sub-second transactions, robust compute workloads, and highly adaptable WebAssembly runtimes tailored to developer requirements.
+IPUP was built during the [Filecoin Data Economy Hackathon 2024](https://dorahacks.io/hackathon/filecoin-data-economy/detail)
 
-Visit the [IPC project page](https://www.ipc.space/) for news and guides.
+IPUP is a pack of multiple custom syscalls which allow extending your contract's on-chain functionality beyond the native level. It currently includes 5 custom syscalls including hashing algorithms such as blake2 and crc64, password encryption algorithms such as pbkdf2 and argon2, along with non-verifiable prng.
 
 ## Prerequisites
+You must create an IPC subnet from this repo in order to use our Custom Kernel.
 
-On Linux (links and instructions for Ubuntu):
+Checkout [IPC.md](IPC.md), if you don't know to create an IPC subnet.
 
-- Install system packages: `sudo apt install build-essential clang cmake pkg-config libssl-dev protobuf-compiler git curl`.
-- Install Rust. See [instructions](https://www.rust-lang.org/tools/install).
-- Install cargo-make: `cargo install --force cargo-make`.
-- Install Docker. See [instructions](https://docs.docker.com/engine/install/ubuntu/).
-- Install Foundry. See [instructions](https://book.getfoundry.sh/getting-started/installation).
-
-On MacOS:
-
-- Install Xcode from App Store or terminal: xcode-select --install
-- Install Homebrew: https://brew.sh/
-- Install dependencies: brew install jq
-- Install Rust: https://www.rust-lang.org/tools/install (if you have homebrew installed rust, you may need to uninstall that if you get errors in the build)
-- Install Cargo make: cargo install --force cargo-make
-- Install docker: https://docs.docker.com/desktop/install/mac-install/
-- Install foundry: https://book.getfoundry.sh/getting-started/installation
-
-## Building
+## How to use
 
 ```
-# make sure that rust has the wasm32 target
-rustup target add wasm32-unknown-unknown
-
-# add your user to the docker group
-sudo usermod -aG docker $USER && newgrp docker
-
-# clone this repo and build
-git clone https://github.com/consensus-shipyard/ipc.git
-cd ipc
-make
-
-# building will generate the following binaries
-./target/release/ipc-cli --version
-./target/release/fendermint --version
+ACTOR_ID = 49
 ```
 
-## Run tests
+### Non-verifiable PRNG
+```
+Method Number = 4203131911
+```
+The custom syscall for Non-verifiable PRNG is created using Box-Muller method. It uses ```rand``` crate from rust.
+
+It can be used in solidity contracts to generate a random ```uint64``` number.
+
+TODO - Implement Verifiable Randomness.
+
+**Example Smart contract implementation**
 
 ```
-make test
+function rand() public returns (bytes memory) {
+    raw_response = Actor.callByID(
+        CommonTypes.FilActorId.wrap(49), //uint64, actor id
+        4203131911, // method number
+        Misc.NONE_CODEC,
+        new bytes(0),
+        0,
+        true
+    );
+
+
+    return raw_response;
+}
 ```
+**How it works** - [RNG Syscall](fendermint/vm/interpreter/src/fvm/customsyscalls/mycustomkernel.rs#L194)
 
-## Code organization
+### Blake2
+```
+Method Number = 3062748980
+```
+Blake2 is a cryptographic hash function which provides high performance, versatility and security to the users. It is not natively supported in solidity, however it's highly needed in cryptographic operations.
 
-- `ipc/cli`: A Rust binary crate for our client `ipc-cli` application that provides a simple and easy-to-use interface to interact with IPC as a user and run all the processes required for the operation of a subnet.
-- `ipc/provider` A Rust crate that implements the `IpcProvider` library. This provider can be used to interact with IPC from Rust applications (and is what the `ipc-cli` uses under the hood).
-- `ipc/api`: IPC common types and utils.
-- `ipc/wallet`: IPC key management and identity.
-- `fendermint`: Peer implementation to run subnets based on Tendermint Core.
-- `contracts`: A reference implementation of all the actors (i.e. smart contracts) responsible for the operation of the IPC (Inter-Planetary Consensus) protocol.
-- `ipld`: IPLD specific types and libraries
+Note - IPUP currently supports hashing of strings with length less than or equal to 8 as IPC currently supports only integers as custom syscall inputs.
 
-## Documentation and Guides
+We have used a workaround to pass strings as uint64 to the syscalls.
 
-**We've prepared a [quick start guide](https://docs.ipc.space/quickstarts/deploy-a-subnet) that will have you running and validating on your own subnet quickly, at the cost of detailed explanations.**
-
-For further documentation, see:
-
-- [docs/contracts.md](./docs/ipc/contracts.md) for instructions on how to deploy FEVM actors on subnets.
-- [docs/usage.md](./docs/ipc/usage.md) for instructions on how to use the `ipc-cli` to interact with subnets (from managing your identities, to sending funds to a subnet).
-- [docs/deploying-hierarchy.md](./docs/ipc/deploying-hierarchy.md) for instructions on how to deploy your own instance of IPC on a network.
-
-If you are a developer, see:
-
-- [docs/developers.md](./docs/ipc/developers.md) for useful tips and guides targeted for IPC developers.
-
-## Connecting to a rootnet
-
-You can deploy an IPC hierarchy from any compatible rootnet. The recommended option is to use Filecoin Calibration, but you can also deploy your own.
-
-### Running a subnet in Calibration
-
-Calibration is the primary testnet for Filecoin. It already hosts the IPC actors and can be used as a rootnet on which to deploy new subnets.
-
-In order to use the `ipc-cli` with Calibration we need to have access to a full node syncing with the network. The easiest way to achieve this is to use a [public RPC](https://docs.filecoin.io/networks/calibration/rpcs/). You also need the addresses of the deployed contracts.
-
-If it is the first time that you use your `ipc-cli`, to initialize cli configuration you can run `ipc-cli config init`. This will populate a new default config file in `~/.ipc/config.toml`.
-
-The suggested configuration for the `ipc-cli` is:
+**Example Smart contract implementation**
 
 ```
-keystore_path = "~/.ipc"
+function blake2(string memory data) public returns (bytes memory) {
+    uint256 capacity = 1;
 
-# Filecoin Calibration
-[[subnets]]
-id = "/r314159"
+    CBOR.CBORBuffer memory buf = CBOR.create(capacity);
+    CBOR.writeUInt64(buf, stringToUint64(data));
+    raw_response = Actor.callByID(
+        CommonTypes.FilActorId.wrap(49), //uint64, actor id
+        3062748980, // method number
+        Misc.CBOR_CODEC,
+        buf.data(),
+        0,
+        true
+    );
+    return raw_response;
 
-[subnets.config]
-network_type = "fevm"
-provider_http = "https://api.calibration.node.glif.io/rpc/v1"
-gateway_addr = "0x1AEe8A878a22280fc2753b3C63571C8F895D2FE3"
-registry_addr = "0x0b4e239FF21b40120cDa817fba77bD1B366c1bcD"
+}
 ```
+**How it works** - [Blake2 Syscall](fendermint/vm/interpreter/src/fvm/customsyscalls/mycustomkernel.rs#L81)
 
-To be able to interact with Calibration and run new subnets, some FIL should be provided to, at least, the wallet that will be used by the `ipc-cli` to interact with IPC. You can request some tFIL for your address through the [Calibration Faucet](https://faucet.calibration.fildev.network/funds.html).
+### CRC64
+```
+Method Number = 1931031948
+```
+CRC (Cyclic Redundancy Check) is an error-detecting code used in digital networks and storage devices to detect accidental changes to raw data. It operates by generating a fixed-size checksum (typically 16, 32, or 64 bits) based on the data being checked, which is then appended to the data or transmitted alongside it.
 
-## Help
+It is a highly important algorithm in networking related tasks.
 
-If you meet any obstacles join us in **#ipc-help** in the [Filecoin Slack workspace](https://filecoin.io/slack).
+Note - IPUP currently supports hashing of strings with length less than or equal to 8 as mentioned earlier.
+
+**Example Smart contract implementation**
+
+```
+function crc(string memory data) public returns (bytes memory) {
+    uint256 capacity = 1;
+
+    CBOR.CBORBuffer memory buf = CBOR.create(capacity);
+    CBOR.writeUInt64(buf, stringToUint64(data));
+    raw_response = Actor.callByID(
+        CommonTypes.FilActorId.wrap(49), //uint64, actor id
+        1931031948, // method number
+        Misc.CBOR_CODEC,
+        buf.data(),
+        0,
+        true
+    );
+    return raw_response;
+
+}
+```
+**How it works** - [CRC Syscall](fendermint/vm/interpreter/src/fvm/customsyscalls/mycustomkernel.rs#L111)
+
+### Pbkdf2
+```
+Method Number = 3173791782
+```
+PBKDF2 (Password-Based Key Derivation Function 2) is a key derivation function that is used to securely derive cryptographic keys from passwords or passphrases. It's a widely-used algorithm for deriving cryptographic keys from passwords, and it's designed to be resistant to brute-force attacks.
+
+It can be used as layer of authentication for web3 applications.
+
+IPUP can be used to generate a Pbkdf2 hash.
+
+Note - IPUP currently supports hashing of strings with length less than or equal to 8 as mentioned earlier.
+
+TODO - Add a custom syscall for password verification using the generated hash.
+
+**Example Smart contract implementation**
+
+```
+function pbkdf2(string memory password, string memory salt) public returns (bytes memory) {
+    uint256 capacity = 1;
+
+    CBOR.CBORBuffer memory buf = CBOR.create(capacity);
+    CBOR.startFixedArray(buf, 2);
+    CBOR.writeUInt64(buf, stringToUint64(password));
+    CBOR.writeUInt64(buf, stringToUint64(salt));
+    raw_response = Actor.callByID(
+        CommonTypes.FilActorId.wrap(49), //uint64, actor id
+        3173791782, // method number
+        Misc.CBOR_CODEC,
+        buf.data(),
+        0,
+        true
+    );
+    return raw_response;
+
+}
+```
+**How it works** - [Pbkdf2 Syscall](fendermint/vm/interpreter/src/fvm/customsyscalls/mycustomkernel.rs#L132)
+
+### Argon2
+```
+Method Number = 2785015011
+```
+Argon2 is a key derivation function that was selected as the winner of the Password Hashing Competition (PHC) in 2015. It's designed to securely hash passwords and other sensitive information while also being resistant to various types of attacks, including brute-force, dictionary, and side-channel attacks. Argon2 is considered to be one of the most secure and efficient password hashing algorithms available today, and it's being widely adopted in various applications and security protocols.
+
+It's use case is similar to Pbkdf2. But it is relatively slower. Hence, it should be used for applications which are ready to trade off performance for security.
+
+IPUP implements a basic version of Argon2 by hashing password with salt to give a uint64 hash.
+
+Note - IPUP currently supports hashing of strings with length less than or equal to 8 as mentioned earlier.
+
+TODO - Add a custom syscall for password verification using the generated hash.
+
+**Example Smart contract implementation**
+
+```
+function argon2(string memory password, string memory salt) public returns (bytes memory) {
+    uint256 capacity = 1;
+
+    CBOR.CBORBuffer memory buf = CBOR.create(capacity);
+    CBOR.startFixedArray(buf, 2);
+    CBOR.writeUInt64(buf, stringToUint64(password));
+    CBOR.writeUInt64(buf, stringToUint64(salt));
+    raw_response = Actor.callByID(
+        CommonTypes.FilActorId.wrap(49), //uint64, actor id
+        2785015011, // method number
+        Misc.CBOR_CODEC,
+        buf.data(),
+        0,
+        true
+    );
+    return raw_response;
+
+}
+```
+**How it works** - [Argon2 Syscall](fendermint/vm/interpreter/src/fvm/customsyscalls/mycustomkernel.rs#L150)
+
+## Handling Outputs
+Custom syscalls give outputs in a CBOR byte string, like - 
+
+```0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000091b6ac0442575d817cd0000000000000000000000000000000000000000000000```
+
+
+Out of this big string, only - ```6ac0442575d817cd``` is useful for us.
+So, make sure to play around and figure out your use case accordingly.
+
+## What's next for IPUP
+This project will be fully open-sourced and will be open for contributions after the hackathon.
+
+I had two more features in my mind - 
+
+1. JSON String Schema Validation.
+2. A syscall to make On-chain api calls.
+
+But, these went out of scope for this hackathon, so I plan to implement these too.
