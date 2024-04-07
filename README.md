@@ -17,6 +17,7 @@ You must create an IPC subnet from this repo in order to use our Custom Kernel.
 Checkout [IPC.md](IPC.md), if you don't know to create an IPC subnet.
 
 ## How to use
+View sample contract - [IPUP.sol](ipup-example/contracts/IPUP.sol)
 
 ```
 ACTOR_ID = 49
