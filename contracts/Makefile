@@ -40,7 +40,7 @@ compile-abi: | forge
 	./ops/compile-abi.sh $(OUTPUT)
 
 rust-binding:
-	OUTPUT=$(OUTPUT) cargo build --locked --release --manifest-path ./binding/Cargo.toml -p ipc_actors_abis
+	OUTPUT=$(OUTPUT) cargo build --release --manifest-path ./binding/Cargo.toml -p ipc_actors_abis
 
 # commit-abi:
 # 	./ops/commit-abi.sh $(OUTPUT)

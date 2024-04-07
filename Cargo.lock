@@ -1621,6 +1621,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "crc"
+version = "3.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "86ec7a15cbe22e59248fc7eadb1907dab5ba09372595da4d73dd805ed4417dfe"
+dependencies = [
+ "crc-catalog",
+]
+
+[[package]]
+name = "crc-catalog"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19d374276b40fb8bbdee95aef7c7fa6b5316ec764510eb64b8dd0e2ed0d7e7f5"
+
+[[package]]
 name = "crc32fast"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2815,6 +2830,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "fendermint_actor_customsyscall"
+version = "0.1.0"
+dependencies = [
+ "cid",
+ "fil_actors_runtime",
+ "frc42_dispatch",
+ "fvm_ipld_encoding",
+ "fvm_sdk",
+ "fvm_shared",
+ "num-derive 0.3.3",
+ "num-traits",
+ "serde",
+ "serde_tuple",
+]
+
+[[package]]
 name = "fendermint_actor_eam"
 version = "0.1.0"
 dependencies = [
@@ -2842,6 +2873,7 @@ dependencies = [
  "anyhow",
  "cid",
  "fendermint_actor_chainmetadata",
+ "fendermint_actor_customsyscall",
  "fendermint_actor_eam",
  "fil_actor_bundler",
  "fil_actors_runtime",
@@ -3304,13 +3336,17 @@ dependencies = [
 name = "fendermint_vm_interpreter"
 version = "0.1.0"
 dependencies = [
+ "ambassador",
  "anyhow",
  "arbitrary",
  "async-stm",
  "async-trait",
+ "blake2",
  "cid",
+ "crc",
  "ethers",
  "fendermint_actor_chainmetadata",
+ "fendermint_actor_customsyscall",
  "fendermint_actor_eam",
  "fendermint_actors",
  "fendermint_crypto",
@@ -3340,13 +3376,16 @@ dependencies = [
  "libipld",
  "multihash 0.18.1",
  "num-traits",
+ "pbkdf2 0.12.2",
  "pin-project",
  "quickcheck",
  "quickcheck_macros",
  "rand",
+ "rust-argon2",
  "serde",
  "serde_json",
  "serde_with 2.3.3",
+ "sha2 0.10.8",
  "tempfile",
  "tendermint 0.31.1",
  "tendermint-rpc",
@@ -7984,6 +8023,17 @@ dependencies = [
  "nix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "rust-argon2"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d9848531d60c9cbbcf9d166c885316c24bc0e2a9d3eba0956bb6cbbd79bc6e8"
+dependencies = [
+ "base64 0.21.7",
+ "blake2b_simd",
+ "constant_time_eq 0.3.0",
 ]
 
 [[package]]

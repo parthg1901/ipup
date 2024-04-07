@@ -8,6 +8,7 @@ mod checkpoint;
 mod exec;
 mod externs;
 mod genesis;
+pub mod customsyscalls;
 mod query;
 pub mod state;
 pub mod store;

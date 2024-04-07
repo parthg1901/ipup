@@ -43,6 +43,7 @@ license-file = "LICENSE-APACHE"
 ## dummy trigger ci
 
 [workspace.dependencies]
+ambassador = "0.3.6"
 anyhow = "1"
 arbitrary = { version = "1", features = ["derive"] }
 arbtest = "0.2"
@@ -79,6 +80,7 @@ integer-encoding = { version = "3.0.3", default-features = false }
 jsonrpc-v2 = { version = "0.11", default-features = false, features = [
   "bytes-v10",
 ] }
+jsonschema = "0.17.1"
 k256 = "0.11" # Same as tendermint-rs
 lazy_static = "1.4"
 libipld = { version = "0.16", default-features = false, features = [

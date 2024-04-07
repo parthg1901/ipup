@@ -9,6 +9,9 @@ license.workspace = true
 fendermint_actor_chainmetadata = { path = "chainmetadata", features = [
     "fil-actor",
 ] }
+fendermint_actor_customsyscall = { path = "customsyscall", features = [
+    "fil-actor",
+] }
 fendermint_actor_eam = { path = "eam", features = ["fil-actor"] }
 
 [dependencies]
@@ -17,6 +20,7 @@ anyhow = { workspace = true }
 fvm_ipld_blockstore = { workspace = true }
 fvm_ipld_encoding = { workspace = true }
 fendermint_actor_chainmetadata = { path = "chainmetadata" }
+fendermint_actor_customsyscall = { path = "customsyscall" }
 fendermint_actor_eam = { path = "eam" }
 
 [build-dependencies]

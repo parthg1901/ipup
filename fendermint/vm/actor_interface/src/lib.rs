@@ -45,6 +45,7 @@ macro_rules! define_singleton {
 pub mod account;
 pub mod burntfunds;
 pub mod chainmetadata;
+pub mod customsyscall;
 pub mod cron;
 pub mod diamond;
 pub mod eam;
